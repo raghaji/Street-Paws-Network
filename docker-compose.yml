@@ -1,0 +1,15 @@
+version: '1.0'
+
+services:
+    db:
+        image: postgres
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: Pa$$1234
+            POSTGRES_USER: admin
+            POSTGRES_DB: paw_Data
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 8081:8080
