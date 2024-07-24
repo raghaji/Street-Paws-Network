@@ -1,15 +1,13 @@
 # Use an official node runtime as a parent image
-FROM node:14-alpine
+FROM node:22-alpine
 
 # Set the working directory
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY package.json ./
+COPY /app/. . 
+WORKDIR /app
 RUN npm install
-
-# Copy the rest of the application code
-COPY . .
 
 # Build the React application
 RUN npm run build

@@ -1,21 +1,27 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:11-jre-slim
+# Use an official Maven image to build the application
+FROM maven:3.8.5-openjdk-17 AS build
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /demo
 
-# Copy the Maven build file and the source code
-#COPY pom.xml /app
-#COPY src /app/src
-COPY . .
-# Install Maven and build the application
-RUN apt-get update && apt-get install -y maven && mvn -f /app/pom.xml clean package
+# Copy the pom.xml file and the src directory
+COPY /demo/pom.xml .
+COPY /demo/src ./src
 
-# Copy the Spring Boot jar to the container
-COPY target/demo-0.0.1-SNAPSHOT.jar /app/demo.jar
+# Package the application
+RUN mvn clean package -DskipTests
 
-# Expose the port the app runs on
+# Use a smaller base image to run the application
+FROM openjdk:17-jdk-alpine
+
+# Set the working directory
+WORKDIR /demo
+
+# Copy the packaged application from the build stage
+COPY --from=build /demo/target/*.jar app.jar
+
+# Expose the application port
 EXPOSE 8080
 
-# Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "/app/demo.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
