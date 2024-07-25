@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy package.json and install dependencies
 COPY /app/. . 
-WORKDIR /app
+RUN npm install react-scripts
 RUN npm install
 
 # Build the React application

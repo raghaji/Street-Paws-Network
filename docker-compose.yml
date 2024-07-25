@@ -24,6 +24,7 @@ services:
       - mysql
     networks:
       - internal_network
+      - frontend_network    #to check the databases
 
   springboot:
     build:
@@ -38,6 +39,8 @@ services:
       - "8083:8080"
     depends_on:
       - mysql
+    volumes:
+      - image_data:/uploaded_images
     networks:
       - api_network
       - internal_network
@@ -49,14 +52,15 @@ services:
     container_name: reactapp
     ports:
       - "3000:3000"
-    #depends_on:
-    #  - springboot
+    depends_on:
+      - springboot
     networks:
       - frontend_network
       - api_network
 
 volumes:
   mysql_data:
+  image_data:
 
 networks:
   internal_network:
