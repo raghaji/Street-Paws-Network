@@ -8,11 +8,11 @@
 		<version>3.3.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>org.raghaji</groupId>
-	<artifactId>demo</artifactId>
+	<groupId>org.pawnetwork</groupId>
+	<artifactId>street-paw-network</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>demo</name>
-	<description>Paw Network Project</description>
+	<name>street-paw-network</name>
+	<description>Street Paw Network project for Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -30,9 +30,14 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<artifactId>spring-boot-starter-data-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -53,14 +58,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.session</groupId>
-			<artifactId>spring-session-core</artifactId>
+			<artifactId>spring-session-jdbc</artifactId>
 		</dependency>
-
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-docker-compose</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
+			
 		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
@@ -78,10 +81,29 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-entitymanager</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter-test</artifactId>
 			<version>3.0.3</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+			<version>6.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -107,4 +129,21 @@
 		</plugins>
 	</build>
 
+
+
+	<dependencyManagement>
+	
+
+		<dependencies>
+		
+
+			<dependency>
+				<groupId>jakarta.persistence</groupId>
+				<artifactId>jakarta.persistence-api</artifactId>
+				<version>3.1.0</version>
+			</dependency>
+
+		</dependencies>
+
+	</dependencyManagement>
 </project>

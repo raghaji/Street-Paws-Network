@@ -4,14 +4,17 @@ services:
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
+      MYSQL_DATABASE: pawNetworks
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
       - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
     networks:
       - internal_network
-
+      - frontend_network
+       
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -32,7 +35,7 @@ services:
       dockerfile: Dockerfile
     container_name: springboot
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mydatabase
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pawNetworks
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
     ports:
