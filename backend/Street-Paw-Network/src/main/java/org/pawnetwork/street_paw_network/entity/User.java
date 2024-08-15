@@ -7,20 +7,17 @@ public class User {
     private String firstName;
     private String lastName;
     private String password;
-    private String role;
     private String location;
 
     public User() {
     }
-    public User(Long id, String username, String email, String firstName, String lastName, String password, String role,
-            String location) {
+    public User(Long id, String username, String email, String firstName, String lastName, String password, String location) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
-        this.role = role;
         this.location = location;
     }
 
@@ -61,12 +58,6 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    public String getRole() {
-        return role;
-    }
-    public void setRole(String role) {
-        this.role = role;
-    }
     public String getLocation() {
         return location;
     }
@@ -85,7 +76,6 @@ public class User {
         result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
         result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
         result = prime * result + ((password == null) ? 0 : password.hashCode());
-        result = prime * result + ((role == null) ? 0 : role.hashCode());
         result = prime * result + ((location == null) ? 0 : location.hashCode());
         return result;
     }
@@ -129,11 +119,6 @@ public class User {
                 return false;
         } else if (!password.equals(other.password))
             return false;
-        if (role == null) {
-            if (other.role != null)
-                return false;
-        } else if (!role.equals(other.role))
-            return false;
         if (location == null) {
             if (other.location != null)
                 return false;
@@ -145,7 +130,7 @@ public class User {
     @Override
     public String toString() {
         return "User [id=" + id + ", username=" + username + ", email=" + email + ", firstName=" + firstName
-                + ", lastName=" + lastName + ", password=" + password + ", role=" + role + ", location=" + location
+                + ", lastName=" + lastName + ", password=" + password + ", location=" + location
                 + "]";
     }
 

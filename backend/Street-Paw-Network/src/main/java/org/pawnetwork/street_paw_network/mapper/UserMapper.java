@@ -14,11 +14,14 @@ public interface UserMapper {
     @Select("SELECT * FROM users")
     List<User> findAll();
 
-    @Insert("INSERT INTO users(username, password, email, firstName, lastName, location) VALUES(#{username}, #{password}, #{email},#{firstName}, #{lastName}, #{location})")
+    @Select("SELECT * FROM users WHERE role = #{role}")
+    List<User> findByRole(@Param("role") String role);
+
+    @Insert("INSERT INTO users(username, password, email, firstName, lastName, location, role) VALUES(#{username}, #{password}, #{email},#{firstName}, #{lastName}, #{role}, #{location})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(User user);
 
-    @Update("UPDATE users SET username=#{username}, password=#{password}, email=#{email}, location=#{location}, firstName=#{firstName}, lastName=#{lastName} WHERE id=#{id}")
+    @Update("UPDATE users SET username=#{username}, password=#{password}, email=#{email}, location=#{location}, firstName=#{firstName}, lastName=#{lastName}, role=#{role} WHERE id=#{id}")
     void update(User user);
 
     @Delete("DELETE FROM users WHERE id=#{id}")
