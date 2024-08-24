@@ -1,10 +1,16 @@
 package org.raghaji.street_paw_network.model;
 
+import java.util.Set;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -23,4 +29,15 @@ public class User {
     @Column(nullable = false)
     private String password;
     private String location;
+    //@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.MERGE)
+    @JoinTable(name = "user_role",
+        joinColumns = {
+            @JoinColumn(name= "User_ID")
+        },
+        inverseJoinColumns = {
+            @JoinColumn(name="Role_ID")
+        }
+    )
+    private Set<Role> role;
 }
