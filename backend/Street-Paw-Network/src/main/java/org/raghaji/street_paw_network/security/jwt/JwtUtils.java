@@ -5,10 +5,11 @@ import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
+import org.raghaji.street_paw_network.repository.BlacklistedTokenRepository;
 import org.raghaji.street_paw_network.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -23,6 +24,9 @@ public class JwtUtils {
 
   @Value("${raghaji.application.jwtExpirationMs}")
   private int jwtExpirationMs;
+
+  @Autowired
+  private BlacklistedTokenRepository blacklistedTokenRepository;
 
   public String generateJwtToken(Authentication authentication) {
 
@@ -47,6 +51,9 @@ public class JwtUtils {
   }
 
   public boolean validateJwtToken(String authToken) {
+    if(blacklistedTokenRepository.findByToken(authToken).isPresent()){
+      return false;
+    }
     try {
       Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
       return true;

@@ -27,10 +27,7 @@ public class CreateDefaultUserandRole {
             Role adminRole = new Role(ERole.ROLE_ADMIN);
             roleRepository.save(adminRole);
         }
-        if((roleRepository.findByName(ERole.ROLE_MODERATOR)).isEmpty()){
-            Role moderatorRole = new Role(ERole.ROLE_MODERATOR);
-            roleRepository.save(moderatorRole);
-        }
+
         if ((roleRepository.findByName(ERole.ROLE_USER)).isEmpty()) {
             Role userRole= new Role(ERole.ROLE_USER);
             roleRepository.save(userRole);
