@@ -1,8 +1,8 @@
 package org.raghaji.street_paw_network.services;
-import org.raghaji.street_paw_network.dto.CommentDto;
 import org.raghaji.street_paw_network.models.Comment;
 import org.raghaji.street_paw_network.models.Post;
 import org.raghaji.street_paw_network.repository.PostRepository;
+import org.raghaji.street_paw_network.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +24,10 @@ public class PostService {
     @Autowired
     private CommentService commentService; 
 
-    public Post createPost(String title,String content, List<MultipartFile> photos) {
+    @Autowired
+    UserRepository userRepository;
+
+    public Post createPost(String title,String content, List<MultipartFile> photos,Long userid) {
         // Save photos and get their URLs
         List<String> photoUrls = new ArrayList<>();
         for (MultipartFile photo : photos) {
@@ -37,18 +40,26 @@ public class PostService {
         post.setTitle(title);
         post.setContent(content);
         post.setPhotoUrls(photoUrls);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUser(userRepository.findById(userid).get());
         return postRepository.save(post);
     }
 
     public List<Post> getAllPosts() {
         return postRepository.findAll();
     }
-    public Comment addCommentToPost(CommentDto commentDto) {
-        commentDto.setCreatedAt(LocalDateTime.now());
-        return commentService.addComment(commentDto);
+    public Comment addCommentToPost(Comment Comment) {
+        return commentService.addComment(Comment);
     }
 
     public Optional<Post> getPostById(Long id){
         return postRepository.findById(id);
     }
+
+    public boolean  deletePost(Post post){
+        postRepository.delete(post);
+        boolean postPresent = (postRepository.findById(post.getId())).isPresent();
+        return !postPresent;
+    }
+    
 }

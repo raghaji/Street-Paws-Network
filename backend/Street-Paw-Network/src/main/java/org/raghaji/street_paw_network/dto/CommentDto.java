@@ -2,7 +2,7 @@ package org.raghaji.street_paw_network.dto;
 
 import java.time.LocalDateTime;
 
-import org.raghaji.street_paw_network.models.User;
+import org.raghaji.street_paw_network.services.UserDetailsImpl;
 
 
 public class CommentDto {
@@ -11,14 +11,14 @@ public class CommentDto {
     private Long postId;
     private String content;
     private LocalDateTime createdAt;
-    private User user;
+    private UserDetailsImpl userDetailsImpl;
     
-    public CommentDto(Long id, Long postId, String content, LocalDateTime createdAt, User user) {
+    public CommentDto(Long id, Long postId, String content, LocalDateTime createdAt, UserDetailsImpl userDetailsImpl) {
         this.id = id;
         this.postId = postId;
         this.content = content;
         this.createdAt = createdAt;
-        this.user = user;
+        this.userDetailsImpl = userDetailsImpl;
     }
     public CommentDto() {
     }
@@ -46,11 +46,11 @@ public class CommentDto {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    public User getUser() {
-        return user;
+    public UserDetailsImpl getUser() {
+        return userDetailsImpl;
     }
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(UserDetailsImpl userDetailsImpl) {
+        this.userDetailsImpl = userDetailsImpl;
     }
 
 }

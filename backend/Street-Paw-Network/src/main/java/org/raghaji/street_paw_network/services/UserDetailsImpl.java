@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import org.raghaji.street_paw_network.models.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

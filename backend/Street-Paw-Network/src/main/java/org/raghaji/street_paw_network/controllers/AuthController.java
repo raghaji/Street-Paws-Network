@@ -2,6 +2,8 @@ package org.raghaji.street_paw_network.controllers;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +39,9 @@ import org.raghaji.street_paw_network.repository.BlacklistedTokenRepository;
 import org.raghaji.street_paw_network.repository.RoleRepository;
 import org.raghaji.street_paw_network.repository.UserRepository;
 import org.raghaji.street_paw_network.security.jwt.JwtUtils;
+import org.raghaji.street_paw_network.services.Convertto;
 import org.raghaji.street_paw_network.services.UserDetailsImpl;
+
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -59,6 +64,9 @@ public class AuthController {
 
   @Autowired
   JwtUtils jwtUtils;
+
+  @Autowired
+  private Convertto convertto;
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -187,7 +195,7 @@ public class AuthController {
     }
     return null;}
 
-  @GetMapping("/userdetails")
+  @GetMapping("userdetails")
   @PreAuthorize("hasRole('ADMIN') OR hasRole('USER')")
   public ResponseEntity<?> getUserDetails(HttpServletRequest request) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -199,5 +207,57 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
     }
   }
+  @PostMapping("delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    Optional<User> user = userRepository.findById(id);
+    if (user.isPresent()) {
+      userRepository.deleteById(id);
+      boolean isDeleted = userRepository.findById(id).isEmpty();
+      if (isDeleted) {
+        return new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
+      } else {
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      }  
+    } else {
+      return new ResponseEntity<>("User not found",HttpStatus.NOT_FOUND);
+    }
+    
+
+    
+  }
+  @PostMapping("resetpassword")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> resetPassword(@RequestBody Map<String, Object> request){
+    Optional<User> user = userRepository.findByUsername(((String) request.get("username")));
+    String password = encoder.encode(((String) request.get("password")));
+    if (user.isPresent()) {
+      int ab = userRepository.resetPassword(password, user.get().getId());
+      return new ResponseEntity<>(ab, HttpStatus.ACCEPTED);
+    } else {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+    
+  }
+  @GetMapping("user/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    Optional<User> user = userRepository.findById(id);
+    if (user.isPresent()) {
+      return new ResponseEntity<UserDetailsImpl>(UserDetailsImpl.build(user.get()), HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+  }
+  @GetMapping("all")
+  public ResponseEntity<?> getAllUsers() {
+      List<User> allUsers= userRepository.findAll();
+      List<UserDetailsImpl> userDetails = allUsers.stream()
+                                                  .map(user -> convertto.converttoDetailsImpl(user))
+                                                  .collect(Collectors.toList());
+      return new ResponseEntity<List<UserDetailsImpl>>(userDetails, HttpStatus.OK);
+  }
+  
+  
 
 }

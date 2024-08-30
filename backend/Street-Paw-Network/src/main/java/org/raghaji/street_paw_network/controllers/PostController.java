@@ -11,10 +11,13 @@ import org.raghaji.street_paw_network.dto.PostDto;
 import org.raghaji.street_paw_network.models.Comment;
 import org.raghaji.street_paw_network.models.Post;
 import org.raghaji.street_paw_network.services.PostService;
+import org.raghaji.street_paw_network.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.raghaji.street_paw_network.services.CommentService;
 import org.raghaji.street_paw_network.services.Convertto;
 @CrossOrigin(origins = "*", maxAge = 86400000)
@@ -38,19 +44,6 @@ public class PostController {
     @Autowired
     private CommentService commentService;
 
-    @PostMapping("create")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createPost(
-            @RequestParam("title") String title,
-            @RequestParam("content") String content,
-            @RequestParam("photos") List<MultipartFile> photos) {
-
-        Post post = postService.createPost(title,content, photos);
-        PostDto postDto = convertto.convertToPostDto(post); //convertToPostDto(post);
-        return new ResponseEntity<>(postDto, HttpStatus.CREATED);
-        
-    }
-
     @GetMapping("all")
     public ResponseEntity<List<PostDto>> getAllPosts() {
         List<Post> posts = postService.getAllPosts();
@@ -61,42 +54,81 @@ public class PostController {
     }
 
     
-    @GetMapping("/{id}")
+    @GetMapping("/post/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable Long id) {
         Optional<Post> optionalPost = postService.getPostById(id);
         if (optionalPost.isPresent()) {
             Post post = optionalPost.get();
-            PostDto postDto = new PostDto();
-            postDto.setId(post.getId());
-            postDto.setContent(post.getContent());
-            postDto.setTitle(post.getTitle());
-            postDto.setUser(post.getUser());
-            postDto.setCreatedAt(post.getCreatedAt());
-            postDto.setPhotoUrls(post.getPhotoUrls());
-            postDto.setCommentDtos(
-                commentService.listCommentByPostId(post.getId())
-                .stream()
-                .map(comment -> convertto.convertToCommentDto(comment))
-                .collect(Collectors.toList())
-                );
+            PostDto postDto = convertto.convertToPostDto(post);
             return new ResponseEntity<>(postDto, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    @PostMapping("/comments")
+    @PostMapping("create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Comment> addComment(@RequestBody Map<String, Object> request) {
-
-        CommentDto commentDto = new CommentDto();
-        commentDto.setContent((String) request.get("content"));
-        commentDto.setPostId(Long.valueOf(request.get("postId").toString()));
-        commentDto.setUser(null);
-        commentDto.setCreatedAt(LocalDateTime.now());
-        Comment comment = postService.addCommentToPost(commentDto);
-        return new ResponseEntity<Comment>(comment, HttpStatus.CREATED);
+    public ResponseEntity<?> createPost(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("photos") List<MultipartFile> photos, HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Post post = postService.createPost(title,content, photos,userDetails.getId());
+        PostDto postDto = convertto.convertToPostDto(post); 
+        return new ResponseEntity<>(postDto, HttpStatus.CREATED);
+        
     }
 
+    @PostMapping("comments")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<?> addComment(@RequestBody Map<String, Object> request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Comment comment = new Comment();
+        comment.setContent((String) request.get("content"));
+        Optional<Post> post=  postService.getPostById(Long.valueOf(request.get("postId").toString()));
+        if (post.isPresent()) {
+            comment.setPost(post.get());
+        } else {
+            return new ResponseEntity<String>("Post not found",HttpStatus.NOT_FOUND);
+        }
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setUser(convertto.convertToUser(userDetails));
+        CommentDto commentDto = convertto.convertToCommentDto(postService.addCommentToPost(comment));
+        return new ResponseEntity<CommentDto>(commentDto, HttpStatus.CREATED);
+    }
 
+    @PostMapping("deletepost/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> postDelete(@PathVariable Long id ) {
+        Optional<Post> post = postService.getPostById(id);
+        if (post.isPresent()) {
+            boolean isDeleted = postService.deletePost(post.get());
+            if (isDeleted) {
+                return new ResponseEntity<>("Post deleted successfully", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+            }
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        
+    }
+
+    @PostMapping("deletecomment/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> commentDelete(@PathVariable Long id) {
+        Optional<Comment> comment = commentService.getCommentById(id);
+        if (comment.isPresent()) {
+            boolean isDeleted = commentService.deleteComment(comment.get());
+            if (isDeleted) {
+                return new ResponseEntity<>("comment deleted successfully", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+            }
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    
 }
