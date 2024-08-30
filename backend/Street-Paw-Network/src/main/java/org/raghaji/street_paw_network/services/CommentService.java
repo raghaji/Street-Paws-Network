@@ -1,6 +1,7 @@
-package org.raghaji.street_paw_network.security.services;
+package org.raghaji.street_paw_network.services;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.raghaji.street_paw_network.dto.CommentDto;
 import org.raghaji.street_paw_network.models.Comment;
@@ -27,15 +28,19 @@ public class CommentService {
     public Comment addComment(CommentDto commentDto) {
         Post post = postRepository.findById(commentDto.getPostId())
             .orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = userRepository.findById(commentDto.getuserId())
-            .orElseThrow(() -> new RuntimeException("User Not found."));
         
+            // User user = userRepository.findById(commentDto.getuserId())
+            // .orElseThrow(() -> new RuntimeException("User Not found."));
         Comment comment = new Comment();
         comment.setContent(commentDto.getContent());
         comment.setPost(post);
-        comment.setUser(user);
+        //comment.setUser(user);
         comment.setCreatedAt(LocalDateTime.now());
 
         return commentRepository.save(comment);
+    }
+
+    public List<Comment> listCommentByPostId(Long id){
+        return (commentRepository.findByPostId(id)).get();
     }
 }

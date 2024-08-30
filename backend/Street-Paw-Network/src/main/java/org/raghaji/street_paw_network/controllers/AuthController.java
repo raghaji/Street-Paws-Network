@@ -31,13 +31,12 @@ import org.raghaji.street_paw_network.models.User;
 import org.raghaji.street_paw_network.payload.request.LoginRequest;
 import org.raghaji.street_paw_network.payload.request.SignupRequest;
 import org.raghaji.street_paw_network.payload.response.JwtResponse;
-import org.raghaji.street_paw_network.payload.response.JwtResponsewithouttoken;
 import org.raghaji.street_paw_network.payload.response.MessageResponse;
 import org.raghaji.street_paw_network.repository.BlacklistedTokenRepository;
 import org.raghaji.street_paw_network.repository.RoleRepository;
 import org.raghaji.street_paw_network.repository.UserRepository;
 import org.raghaji.street_paw_network.security.jwt.JwtUtils;
-import org.raghaji.street_paw_network.security.services.UserDetailsImpl;
+import org.raghaji.street_paw_network.services.UserDetailsImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController

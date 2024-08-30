@@ -1,4 +1,4 @@
-package org.raghaji.street_paw_network.security.services;
+package org.raghaji.street_paw_network.services;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +23,7 @@ public class PhotoStorageService {
             String fileName = photo.getOriginalFilename();
 
             // Create a file path for saving the photo
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Path filePath = (Paths.get(UPLOAD_DIR)).resolve(fileName);
 
             // Save the file locally
             Files.write(filePath, photo.getBytes());

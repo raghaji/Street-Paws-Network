@@ -1,11 +1,9 @@
-// PostPage.js
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const PostPage = () => {
   const [posts, setPosts] = useState([]);
-  const [newPost, setNewPost] = useState({ title: '', content: '', photos: [] });
+  const [newPost, setNewPost] = useState({ content: '', photos: [] });
   const [comment, setComment] = useState('');
 
   useEffect(() => {
@@ -27,7 +25,6 @@ const PostPage = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const formData = new FormData();
-    formData.append('title', newPost.title);
     formData.append('content', newPost.content);
     for (let i = 0; i < newPost.photos.length; i++) {
       formData.append('photos', newPost.photos[i]);
@@ -37,13 +34,14 @@ const PostPage = () => {
     axios.post('http://localhost:8090/api/posts', formData)
       .then(response => {
         setPosts([...posts, response.data]);
-        setNewPost({ title: '', content: '', photos: [] });
+        setNewPost({ content: '', photos: [] });
       })
       .catch(error => console.error('Error posting new post:', error));
   };
 
   const handleCommentSubmit = (postId) => {
-    axios.post(`http://localhost:8090/api/posts/${postId}/comments`, { content: comment })
+    const commentDto = { postId, content: comment };
+    axios.post('http://localhost:8090/api/posts/comments', commentDto)
       .then(response => {
         const updatedPosts = posts.map(post => 
           post.id === postId ? { ...post, comments: [...post.comments, response.data] } : post
@@ -59,14 +57,6 @@ const PostPage = () => {
       <h1>Posts</h1>
 
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          placeholder="Post title"
-          value={newPost.title}
-          onChange={handleInputChange}
-          required
-        />
         <textarea
           name="content"
           placeholder="Post content"
@@ -85,16 +75,15 @@ const PostPage = () => {
       <div className="post-list">
         {posts.map(post => (
           <div key={post.id} className="post-container">
-            <h2 className="post-title">{post.title}</h2>
             <p className="post-content">{post.content}</p>
             <div className="post-images">
-              {post.photos.map((photoUrl, index) => (
+              {post.photoUrls.map((photoUrl, index) => (
                 <img key={index} src={photoUrl} alt={`Post ${post.id} - Photo ${index + 1}`} />
               ))}
             </div>
             <div className="comments-section">
               <h3>Comments</h3>
-              {post.comments.map(comment => (
+              {post.comments && post.comments.map(comment => (
                 <div key={comment.id} className="comment">
                   <p>{comment.content}</p>
                 </div>

@@ -7,6 +7,7 @@ const isAuthenticated = () => {
   return localStorage.getItem('authToken') !== null;
 };
 
+// Higher-order component for protected routes
 const ProtectedRoute = ({ element: Component, ...rest }) => {
   return (
     <Route

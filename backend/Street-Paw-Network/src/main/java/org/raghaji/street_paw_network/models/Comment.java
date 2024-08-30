@@ -31,4 +31,5 @@ public class Comment {
     private User user;
 
     // getters and setters
+
 }

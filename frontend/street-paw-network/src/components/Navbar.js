@@ -1,7 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate  } from 'react-router-dom';
 
-const Navbar = () => {
+function  Navbar() {
+    const navigate = useNavigate();
+    const isAuthenticated = !!localStorage.getItem('accessToken');
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        navigate('/login');
+      };
     return (
         <nav style={styles.navbar}>
             <div style={styles.logo}>
@@ -12,11 +19,21 @@ const Navbar = () => {
                     <Link to="/home" style={styles.link}>Home</Link>
                 </li>
                 <li style={styles.navItem}>
-                    <Link to="/login" style={styles.link}>Login</Link>
+                    <Link to="/Signup" style={styles.link}>Register</Link>
                 </li>
-                <li style={styles.navItem}>
-                    <Link to="/register" style={styles.link}>Register</Link>
-                </li>
+                {isAuthenticated ? (
+                    <>
+                        <li style={styles.navItem}><Link to="/create-post">Create Post</Link></li>
+                        <li style={styles.navItem}><button onClick={handleLogout}>Logout</button></li>
+                    </>
+                    ) : (
+                    <>
+                    <li style={styles.navItem}>
+                        <Link to="/login" style={styles.link}>Login</Link>
+                    </li>
+                </>
+                )}
+
             </ul>
         </nav>
     );

@@ -11,10 +11,21 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      // Send login details to the server
       const response = await authService.login(username, password);
-      localStorage.setItem('user', JSON.stringify(response.data));
-      navigate('/posts');
+
+      // Assuming the response contains user data and JWT token
+      const { data } = response;
+      const { accessToken, ...userData } = data;
+
+      // Store the JWT token and user data in localStorage
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('accessToken', accessToken);
+
+      // Redirect user to the home page after successful login
+      navigate('/');
     } catch (error) {
+      // Handle login errors
       setError('Invalid username or password');
     }
   };
@@ -28,12 +39,14 @@ function Login() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <button type="submit">Login</button>
       </form>

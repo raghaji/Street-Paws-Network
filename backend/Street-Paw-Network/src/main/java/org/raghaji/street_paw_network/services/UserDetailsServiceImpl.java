@@ -1,4 +1,4 @@
-package org.raghaji.street_paw_network.security.services;
+package org.raghaji.street_paw_network.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

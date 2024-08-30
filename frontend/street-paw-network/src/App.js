@@ -1,22 +1,31 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import PostList from './components/Posts/PostList';
 import CreatePost from './components/Posts/CreatePost';
+import Home from './pages/HomePage'; // Import the Home component
 import Navbar from './components/Navbar';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
 
-function App() {
+const App = () => {
+  const isAuthenticated = () => {
+    return localStorage.getItem('accessToken') !== null;
+  };
+
   return (
     <Router>
       <div>
         <Navbar />
         <Routes>
-          <ProtectedRoute path="/" element={<PostList />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={isAuthenticated() ? <PostList /> : <Navigate to="/login" />} />
+          <Route 
+            path="/login" 
+            element={isAuthenticated() ? <Navigate to="/home" /> : <Login />} 
+          />
           <Route path="/signup" element={<Signup />} />
-          <ProtectedRoute path="/create-post" element={<CreatePost />} />
+          <Route path="/create-post" element={isAuthenticated() ? <CreatePost /> : <Navigate to="/login" />} />
+          <Route path="/home" element={isAuthenticated() ? <Home /> : <Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

@@ -10,7 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.raghaji.street_paw_network.repository.BlacklistedTokenRepository;
-import org.raghaji.street_paw_network.security.services.UserDetailsImpl;
+import org.raghaji.street_paw_network.services.UserDetailsImpl;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

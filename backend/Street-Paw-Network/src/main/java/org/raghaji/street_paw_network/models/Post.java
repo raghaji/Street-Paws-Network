@@ -23,6 +23,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String title;
     private String content;
 
     @ElementCollection
@@ -37,4 +38,5 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
     // Getters and Setters
+
 }

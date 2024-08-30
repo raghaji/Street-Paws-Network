@@ -1,4 +1,4 @@
-package org.raghaji.street_paw_network.security.services;
+package org.raghaji.street_paw_network.services;
 
 import java.util.Collection;
 import java.util.List;
