@@ -2,11 +2,11 @@
 FROM maven:3.8.5-openjdk-17 AS build
 
 # Set the working directory
-WORKDIR /demo
+WORKDIR /street-paw-network
 
 # Copy the pom.xml file and the src directory
-COPY /demo/pom.xml .
-COPY /demo/src ./src
+COPY /street-paw-network/pom.xml .
+COPY /street-paw-network/src ./src
 
 # Package the application
 RUN mvn clean package -DskipTests
@@ -15,13 +15,13 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17-jdk-alpine
 
 # Set the working directory
-WORKDIR /demo
+WORKDIR /street-paw-network
 
 # Copy the packaged application from the build stage
-COPY --from=build /demo/target/*.jar app.jar
+COPY --from=build /street-paw-network/target/*.jar app.jar
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 8083
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

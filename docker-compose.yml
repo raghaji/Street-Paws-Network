@@ -4,14 +4,23 @@ services:
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
+      MYSQL_DATABASE: pawNetworks
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
       - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
     networks:
       - internal_network
-
+      - frontend_network  
+    healthcheck:
+      test: ["CMD-SHELL", "exit | mysql -h localhost -P 3306 -u root -p$$MYSQL_ROOT_PASSWORD" ] #["CMD", "sh", "-c", "echo 'exit' | telnet mysql 3306"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 30s
+       
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -25,6 +34,12 @@ services:
     networks:
       - internal_network
       - frontend_network    #to check the databases
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   springboot:
     build:
@@ -32,32 +47,40 @@ services:
       dockerfile: Dockerfile
     container_name: springboot
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mydatabase
+      SPRING_APPLICATION_NAME: street-paw-network
+      SERVER_PORT: 8090
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pawNetworks?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE: ERROR
+      RAGHAJI_APPLICATION_JWTSECRET: ELKzdSnVdN4J+ADUCXDCBlukfo3xfruFuYDHOZjjtwc=
+      RAGHAJI_APPLICATION_JWTEXPIRATIONMS: 86400000
+      RAGHAJI_APPLICATION_UPLOAD_PATH: /uploadedPhotos
+      SPRING_SESSION_STORE_TYPE: jdbc #spring.session.store-type=jdbc
+      SPRING_SESSION_JDBC_INITIALIZE_SCHEMA: always #spring.session.jdbc.initialize-schema=always
+      LOGGING_REQUEST_DETAILS: true #logging.request-details=false
+
     ports:
-      - "8083:8080"
+      - "8090:8090"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      phpmyadmin:
+        condition: service_healthy
     volumes:
-      - image_data:/uploaded_images
+      - image_data:/uploadedPhotos #to store images
     networks:
-      - api_network
       - internal_network
-
-  reactapp:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: reactapp
-    ports:
-      - "3000:3000"
-    depends_on:
-      - springboot
-    networks:
-      - frontend_network
-      - api_network
-
+      - frontend_network 
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo 'exit' | telnet springboot 8090"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 volumes:
   mysql_data:
   image_data:
@@ -65,7 +88,6 @@ volumes:
 networks:
   internal_network:
     driver: bridge
-  api_network:
-    driver: bridge
+    internal: true
   frontend_network:
     driver: bridge
