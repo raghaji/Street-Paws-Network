@@ -28,11 +28,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.raghaji.street_paw_network.services.CommentService;
 import org.raghaji.street_paw_network.services.Convertto;
-@CrossOrigin(origins = "*", maxAge = 86400000)
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -70,7 +68,7 @@ public class PostController {
     public ResponseEntity<?> createPost(
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam("photos") List<MultipartFile> photos, HttpServletRequest request) {
+            @RequestParam("photos") List<MultipartFile> photos) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Post post = postService.createPost(title,content, photos,userDetails.getId());

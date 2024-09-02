@@ -42,7 +42,6 @@ import org.raghaji.street_paw_network.security.jwt.JwtUtils;
 import org.raghaji.street_paw_network.services.Convertto;
 import org.raghaji.street_paw_network.services.UserDetailsImpl;
 
-
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
@@ -70,143 +69,168 @@ public class AuthController {
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    Optional<User> user = userRepository.findByUsername(loginRequest.getUsername());
+    if (user.isPresent()) {
+      try {
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-    Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
 
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-    String jwt = jwtUtils.generateJwtToken(authentication);
-    
-    UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();    
-    List<String> roles = userDetails.getAuthorities().stream()
-        .map(item -> item.getAuthority())
-        .collect(Collectors.toList());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+            .map(item -> item.getAuthority())
+            .collect(Collectors.toList());
 
-    return ResponseEntity.ok(new JwtResponse(jwt, 
-                         userDetails.getId(), 
-                         userDetails.getUsername(), 
-                         userDetails.getEmail(), 
-                         roles));
+        return ResponseEntity.ok(new JwtResponse(jwt,
+            userDetails.getId(),
+            userDetails.getUsername(),
+            userDetails.getEmail(),
+            roles));
+      } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password.");
+      }
+
+    } else {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not found.");
+    }
+
   }
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+
     if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-      return ResponseEntity
-          .badRequest()
-          .body(new MessageResponse("Error: Username is already taken!"));
+
+      return new ResponseEntity<String>("Username is already taken!", HttpStatus.BAD_REQUEST);
     }
 
     if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity
-          .badRequest()
-          .body(new MessageResponse("Error: Email is already in use!"));
+      return new ResponseEntity<String>("Email is already in use!", HttpStatus.BAD_REQUEST);
     }
 
     // Create new user's account
-    User user = new User(signUpRequest.getUsername(), 
-               signUpRequest.getEmail(),
-               encoder.encode(signUpRequest.getPassword()));
+    User user = new User(signUpRequest.getUsername(),
+        signUpRequest.getEmail(),
+        encoder.encode(signUpRequest.getPassword()));
 
     Set<String> strRoles = signUpRequest.getRole();
     Set<Role> roles = new HashSet<>();
 
     if (strRoles == null) {
-      Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-          .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-      roles.add(userRole);
-    } else {
-          Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(userRole);
-        };
-    
-
-    user.setRoles(roles);
-    userRepository.save(user);
-
-    return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
-  }
-
-  @PostMapping("/signupadmin")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> registerAdmin(@Valid @RequestBody SignupRequest signUpRequest) {
-    if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-      return ResponseEntity
-          .badRequest()
-          .body(new MessageResponse("Error: Username is already taken!"));
-    }
-
-    if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-      return ResponseEntity
-          .badRequest()
-          .body(new MessageResponse("Error: Email is already in use!"));
-    }
-
-    // Create new user's account
-    User user = new User(signUpRequest.getUsername(), 
-               signUpRequest.getEmail(),
-               encoder.encode(signUpRequest.getPassword()));
-
-    Set<String> strRoles = signUpRequest.getRole();
-    Set<Role> roles = new HashSet<>();
-
-    if (strRoles == null) {
-      Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-          .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-      roles.add(userRole);
+      Optional<Role> userRole = roleRepository.findByName(ERole.ROLE_USER);
+      if (userRole.isPresent()) {
+        roles.add(userRole.get());
+      }
     } else {
       strRoles.forEach(role -> {
         switch (role) {
-        case "admin":
-          Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(adminRole);
-
-          break;
-        default:
-          Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-              .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-          roles.add(userRole);
+          case "admin":
+            Optional<Role> adminRole = roleRepository.findByName(ERole.ROLE_ADMIN);
+            if (adminRole.isPresent()) {
+              roles.add(adminRole.get());
+            }
+            break;
+          case "user":
+            Optional<Role> usnRole = roleRepository.findByName(ERole.ROLE_USER);
+            if (usnRole.isPresent()) {
+              roles.add(usnRole.get());
+            }
+            break;
         }
       });
     }
 
+    boolean isAdmin = roles.stream().anyMatch(role -> role.getName().equals(ERole.ROLE_ADMIN));
+    if (isAdmin) {
+      return new ResponseEntity<String>("You are not allowed to register as Admin", HttpStatus.FORBIDDEN);
+    }
+      user.setRoles(roles);
+      userRepository.save(user);
+      return new ResponseEntity<String>("User registered successfully!", HttpStatus.OK);
+  }
+
+  @PostMapping("/signupadmin")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> registerAdmin(@Valid @RequestBody SignupRequest signUpRequest) {    if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+
+    return new ResponseEntity<String>("Username is already taken!", HttpStatus.BAD_REQUEST);
+  }
+
+  if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+    return new ResponseEntity<String>("Email is already in use!", HttpStatus.BAD_REQUEST);
+  }
+
+  // Create new user's account
+  User user = new User(signUpRequest.getUsername(),
+      signUpRequest.getEmail(),
+      encoder.encode(signUpRequest.getPassword()));
+
+  Set<String> strRoles = signUpRequest.getRole();
+  Set<Role> roles = new HashSet<>();
+
+  if (strRoles == null) {
+    Optional<Role> userRole = roleRepository.findByName(ERole.ROLE_USER);
+    if (userRole.isPresent()) {
+      roles.add(userRole.get());
+    }
+  } else {
+    strRoles.forEach(role -> {
+      switch (role) {
+        case "admin":
+          Optional<Role> adminRole = roleRepository.findByName(ERole.ROLE_ADMIN);
+          if (adminRole.isPresent()) {
+            roles.add(adminRole.get());
+          }
+          break;
+        case "user":
+          Optional<Role> usnRole = roleRepository.findByName(ERole.ROLE_USER);
+          if (usnRole.isPresent()) {
+            roles.add(usnRole.get());
+          }
+          break;
+      }
+    });
+  }
     user.setRoles(roles);
     userRepository.save(user);
-
-    return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    return new ResponseEntity<String>("User registered successfully!", HttpStatus.OK);
   }
+
   @GetMapping("logout")
   @PreAuthorize("hasRole('ADMIN') OR hasRole('USER')")
-  public ResponseEntity<String> logout(HttpServletRequest request){
+  public ResponseEntity<String> logout(HttpServletRequest request) {
     String token = extractToken(request);
-        if (token != null) {
-            BlacklistedToken blacklistedToken = new BlacklistedToken();
-            blacklistedToken.setToken(token);
-            blacklistedTokenRepository.save(blacklistedToken);
-        }
-        return ResponseEntity.ok("Logout successful");
+    if (token != null) {
+      BlacklistedToken blacklistedToken = new BlacklistedToken();
+      blacklistedToken.setToken(token);
+      blacklistedTokenRepository.save(blacklistedToken);
+    }
+    return ResponseEntity.ok("Logout successful");
   }
+
   private String extractToken(HttpServletRequest request) {
     String bearerToken = request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-        return bearerToken.substring(7);
+      return bearerToken.substring(7);
     }
-    return null;}
+    return null;
+  }
 
   @GetMapping("userdetails")
   @PreAuthorize("hasRole('ADMIN') OR hasRole('USER')")
   public ResponseEntity<?> getUserDetails(HttpServletRequest request) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        // Now you can use userDetails to get the user's information
-        return ResponseEntity.ok(userDetails);
+      UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+      // Now you can use userDetails to get the user's information
+      return ResponseEntity.ok(userDetails);
     } else {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
     }
   }
+
   @PostMapping("delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteUser(@PathVariable Long id) {
@@ -218,17 +242,16 @@ public class AuthController {
         return new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
       } else {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-      }  
+      }
     } else {
-      return new ResponseEntity<>("User not found",HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
     }
-    
 
-    
   }
+
   @PostMapping("resetpassword")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> resetPassword(@RequestBody Map<String, Object> request){
+  public ResponseEntity<?> resetPassword(@RequestBody Map<String, Object> request) {
     Optional<User> user = userRepository.findByUsername(((String) request.get("username")));
     String password = encoder.encode(((String) request.get("password")));
     if (user.isPresent()) {
@@ -237,8 +260,9 @@ public class AuthController {
     } else {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
-    
+
   }
+
   @GetMapping("user/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> getUserById(@PathVariable Long id) {
@@ -249,15 +273,14 @@ public class AuthController {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
   }
+
   @GetMapping("all")
   public ResponseEntity<?> getAllUsers() {
-      List<User> allUsers= userRepository.findAll();
-      List<UserDetailsImpl> userDetails = allUsers.stream()
-                                                  .map(user -> convertto.converttoDetailsImpl(user))
-                                                  .collect(Collectors.toList());
-      return new ResponseEntity<List<UserDetailsImpl>>(userDetails, HttpStatus.OK);
+    List<User> allUsers = userRepository.findAll();
+    List<UserDetailsImpl> userDetails = allUsers.stream()
+        .map(user -> convertto.converttoDetailsImpl(user))
+        .collect(Collectors.toList());
+    return new ResponseEntity<List<UserDetailsImpl>>(userDetails, HttpStatus.OK);
   }
-  
-  
 
 }

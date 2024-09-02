@@ -29,7 +29,7 @@ public class PhotoStorageService {
             Files.write(filePath, photo.getBytes());
 
             // Return the file URL (could be a relative path, or a full URL if hosted elsewhere)
-            return filePath.toString();
+            return fileName;
         } catch (IOException e) {
             throw new RuntimeException("Failed to save photo", e);
         }

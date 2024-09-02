@@ -14,5 +14,4 @@ public class BlacklistedToken {
 
     private String token;
 
-    // Getters and setters
 }

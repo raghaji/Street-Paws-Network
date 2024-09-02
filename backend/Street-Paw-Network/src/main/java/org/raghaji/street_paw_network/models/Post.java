@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -24,6 +25,7 @@ public class Post {
     private Long id;
 
     private String title;
+    @Size(max = 2000)
     private String content;
 
     @ElementCollection
@@ -37,6 +39,5 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
-    // Getters and Setters
 
 }

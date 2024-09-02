@@ -27,9 +27,6 @@ public class WebSecurityConfig {
   @Autowired
   private AuthEntryPointJwt unauthorizedHandler;
 
-  @Value("${raghaji.application.corsurl}")
-  private String corsurl;
-
   @Bean
   public AuthTokenFilter authenticationJwtTokenFilter() {
     return new AuthTokenFilter();
@@ -60,8 +57,10 @@ public class WebSecurityConfig {
     http.csrf(csrf -> csrf.disable())
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login").permitAll()
+        .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/signin").permitAll()
+            .requestMatchers("/api/auth/signup").permitAll()
             .requestMatchers("/api/test/**").permitAll()
+            .requestMatchers("/api/image/**").permitAll()
             .requestMatchers("/api/posts/posts/**").permitAll()
             .requestMatchers("/api/posts/all").permitAll()
             .anyRequest().authenticated());

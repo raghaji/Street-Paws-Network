@@ -1,0 +1,3 @@
+# Exclude unnecessary files
+street-paw-network/target/
+*.log
